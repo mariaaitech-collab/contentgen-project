@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ContentGen Pro</title>
+</head>
+<body style="margin:0; padding:0; background:#0f172a; font-family:Arial; color:#e2e8f0;">
+
+    <div style="padding:40px 20px; text-align:center;">
+        <h1 style="color:#6366f1; font-size:48px; margin-bottom:10px;">⚡ ContentGen Pro</h1>
+        <p style="font-size:18px; color:#94a3b8;">If you can see this, HTML works!</p>
+
+        <div id="app" style="display:none; margin-top:40px; max-width:800px; margin-left:auto; margin-right:auto; text-align:left;">
+
+            <h2 style="color:white; margin-bottom:20px;">🔌 Connected Accounts</h2>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-bottom:30px;">
+
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; text-align:center;" id="card-li">
+                    <div style="font-size:28px; margin-bottom:8px;">💼</div>
+                    <div style="color:white; font-weight:bold; margin-bottom:10px;">LinkedIn</div>
+                    <button onclick="connect('li','LinkedIn')" style="padding:8px 16px; background:#0A66C2; color:white; border:none; border-radius:6px; cursor:pointer;">+ Connect</button>
+                </div>
+
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; text-align:center;" id="card-tw">
+                    <div style="font-size:28px; margin-bottom:8px;">🐦</div>
+                    <div style="color:white; font-weight:bold; margin-bottom:10px;">Twitter/X</div>
+                    <button onclick="connect('tw','Twitter')" style="padding:8px 16px; background:#000; color:white; border:none; border-radius:6px; cursor:pointer;">+ Connect</button>
+                </div>
+
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; text-align:center;" id="card-ig">
+                    <div style="font-size:28px; margin-bottom:8px;">📸</div>
+                    <div style="color:white; font-weight:bold; margin-bottom:10px;">Instagram</div>
+                    <button onclick="connect('ig','Instagram')" style="padding:8px 16px; background:#E4405F; color:white; border:none; border-radius:6px; cursor:pointer;">+ Connect</button>
+                </div>
+
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; text-align:center;" id="card-fb">
+                    <div style="font-size:28px; margin-bottom:8px;">📘</div>
+                    <div style="color:white; font-weight:bold; margin-bottom:10px;">Facebook</div>
+                    <button onclick="connect('fb','Facebook')" style="padding:8px 16px; background:#1877F2; color:white; border:none; border-radius:6px; cursor:pointer;">+ Connect</button>
+                </div>
+
+                <div style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:16px; text-align:center;" id="card-yt">
+                    <div style="font-size:28px; margin-bottom:8px;">▶️</div>
+                    <div style="color:white; font-weight:bold; margin-bottom:10px;">YouTube</div>
+                    <button onclick="connect('yt','YouTube')" style="padding:8px 16px; background:#FF0000; color:white; border:none; border-radius:6px; cursor:pointer;">+ Connect</button>
+                </div>
+            </div>
+
+            <h2 style="color:white; margin-bottom:20px;">🎯 Generate Content</h2>
+            <div style="background:#1e293b; border:1px solid #334155; border-radius:14px; padding:24px; margin-bottom:24px;">
+                <label style="display:block; color:#94a3b8; margin-bottom:8px; font-size:14px;">Enter Your Topic:</label>
+                <input type="text" id="topic" placeholder="Type any topic here..." style="width:100%; padding:14px; background:#0f172a; border:2px solid #475569; border-radius:8px; color:white; font-size:16px; box-sizing:border-box; outline:none; margin-bottom:16px;">
+
+                <label style="display:block; color:#94a3b8; margin-bottom:10px; font-size:14px;">Select Platforms:</label>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+                    <button class="plat-btn" data-p="LinkedIn" onclick="toggle(this)" style="padding:10px 18px; background:#374151; border:1px solid #475569; border-radius:8px; color:#cbd5e1; cursor:pointer;">LinkedIn</button>
+                    <button class="plat-btn" data-p="Twitter" onclick="toggle(this)" style="padding:10px 18px; background:#374151; border:1px solid #475569; border-radius:8px; color:#cbd5e1; cursor:pointer;">Twitter</button>
+                    <button class="plat-btn" data-p="Instagram" onclick="toggle(this)" style="padding:10px 18px; background:#374151; border:1px solid #475569; border-radius:8px; color:#cbd5e1; cursor:pointer;">Instagram</button>
+                    <button class="plat-btn" data-p="Facebook" onclick="toggle(this)" style="padding:10px 18px; background:#374151; border:1px solid #475569; border-radius:8px; color:#cbd5e1; cursor:pointer;">Facebook</button>
+                    <button class="plat-btn" data-p="YouTube" onclick="toggle(this)" style="padding:10px 18px; background:#374151; border:1px solid #475569; border-radius:8px; color:#cbd5e1; cursor:pointer;">YouTube</button>
+                </div>
+
+                <button onclick="generate()" id="genBtn" disabled style="width:100%; padding:16px; background:#374151; border:none; border-radius:10px; color:#9ca3af; font-size:17px; font-weight:bold; cursor:not-allowed;">Generate Content</button>
+            </div>
+
+            <div id="output"></div>
+        </div>
+    </div>
+
+<script>
+// ====== CONFIG ======
+// Set this to your deployed Cloudflare Worker URL (see DEPLOY_STEPS.md)
+var BACKEND_URL = 'https://linkedin-post-backend.YOUR-SUBDOMAIN.workers.dev';
+
+// State
+var selected = [];
+var connected = {}; // real state for 'li', simulated placeholders for others
+var contents = [];
+
+var platformColors = {
+    li: '#0A66C2',
+    tw: '#000',
+    ig: '#E4405F',
+    fb: '#1877F2',
+    yt: '#FF0000'
+};
+
+// Only LinkedIn is wired to a real backend right now.
+var REAL_PLATFORMS = { li: true };
+
+window.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('app').style.display = 'block';
+    checkLinkedInStatus();
+});
+
+function checkLinkedInStatus() {
+    fetch(BACKEND_URL + '/api/linkedin/status', { credentials: 'include' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.connected) {
+                connected['li'] = true;
+                var card = document.getElementById('card-li');
+                card.style.borderColor = '#10b981';
+                var btn = card.querySelector('button');
+                var newBtn = document.createElement('button');
+                newBtn.textContent = 'Disconnect';
+                newBtn.style.cssText = 'padding:8px 16px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:#f87171;border-radius:6px;cursor:pointer;';
+                newBtn.onclick = function () { disconnect('li', 'LinkedIn'); };
+                btn.replaceWith(newBtn);
+                renderOutput();
+            }
+        })
+        .catch(function () { /* backend not deployed yet — ignore */ });
+}
+
+function connect(id, name) {
+    if (REAL_PLATFORMS[id]) {
+        // Real OAuth: send the browser to the backend, which redirects to LinkedIn's login
+        window.location.href = BACKEND_URL + '/auth/' + (id === 'li' ? 'linkedin' : id);
+        return;
+    }
+    alert(name + ' isn\'t wired to a real account yet — LinkedIn is the only live integration so far. Ask to have ' + name + ' built next!');
+}
+
+function disconnect(id, name) {
+    delete connected[id];
+    var card = document.getElementById('card-' + id);
+    card.style.borderColor = '#334155';
+    var btn = card.querySelector('button');
+    var newBtn = document.createElement('button');
+    newBtn.textContent = '+ Connect';
+    newBtn.style.cssText = 'padding:8px 16px;background:' + platformColors[id] + ';color:white;border:none;border-radius:6px;cursor:pointer;';
+    newBtn.onclick = function () { connect(id, name); };
+    btn.replaceWith(newBtn);
+    alert(name + ' disconnected locally. (Full server-side disconnect coming later — for now this just hides the connected state in this browser.)');
+    renderOutput();
+}
+
+function updateCount() {
+    var count = Object.keys(connected).length;
+    // (reserved for future use, e.g. showing a connected-account badge)
+    return count;
+}
+
+function toggle(btn) {
+    var p = btn.getAttribute('data-p');
+    if (selected.includes(p)) {
+        selected = selected.filter(function (x) { return x !== p; });
+        btn.style.background = '#374151';
+        btn.style.color = '#cbd5e1';
+    } else {
+        selected.push(p);
+        btn.style.background = '#6366f1';
+        btn.style.color = 'white';
+    }
+    checkBtn();
+}
+
+function checkBtn() {
+    var topic = document.getElementById('topic').value.trim();
+    var btn = document.getElementById('genBtn');
+    if (topic && selected.length > 0) {
+        btn.disabled = false;
+        btn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+        btn.style.color = 'white';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = '✨ Generate Content for ' + selected.length + ' platform' + (selected.length > 1 ? 's' : '');
+    } else {
+        btn.disabled = true;
+        btn.style.background = '#374151';
+        btn.style.color = '#9ca3af';
+        btn.innerHTML = 'Generate Content';
+    }
+}
+
+document.getElementById('topic').addEventListener('input', checkBtn);
+
+function generate() {
+    var topic = document.getElementById('topic').value.trim();
+    if (!topic || !selected.length) return;
+
+    var btn = document.getElementById('genBtn');
+    btn.innerHTML = '⏳ Generating...';
+    btn.disabled = true;
+
+    setTimeout(function () {
+        contents = selected.map(function (s) {
+            return {
+                platform: s,
+                content: 'Content about ' + topic + ' for ' + s + '\n\n' +
+                    'Key Points:\n\n' +
+                    '• Important information about ' + topic + '\n' +
+                    '• Research shows significant impact\n' +
+                    '• Experts recommend action\n\n' +
+                    'Details:\n' + topic + ' continues evolving.\n\n' +
+                    '#ContentGenPro'
+            };
+        });
+
+        renderOutput();
+
+        btn.disabled = false;
+        checkBtn();
+
+        alert('Generated ' + contents.length + ' pieces of content!');
+    }, 1200);
+}
+
+function isPlatformConnected(platform) {
+    var map = { LinkedIn: 'li', Twitter: 'tw', Instagram: 'ig', Facebook: 'fb', YouTube: 'yt' };
+    var id = map[platform];
+    return !!connected[id];
+}
+
+function renderOutput() {
+    var out = document.getElementById('output');
+    if (!contents.length) {
+        out.innerHTML = '';
+        return;
+    }
+
+    out.innerHTML = '';
+
+    var header = document.createElement('h2');
+    header.style.cssText = 'color:white;font-size:22px;margin-bottom:20px;';
+    header.textContent = '📄 Generated Content (' + contents.length + ')';
+    out.appendChild(header);
+
+    contents.forEach(function (item, i) {
+        var isConnected = isPlatformConnected(item.platform);
+
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#1e293b;border:1px solid #334155;border-radius:14px;margin-bottom:16px;overflow:hidden;';
+
+        var head = document.createElement('div');
+        head.style.cssText = 'padding:16px 20px;display:flex;align-items:center;justify-content:space-between;background:#0f172a;border-bottom:1px solid #334155;';
+
+        var left = document.createElement('div');
+        var wordCount = Math.floor(120 + Math.random() * 200);
+        left.innerHTML = '<strong style="color:white;font-size:16px;">' + item.platform + '</strong> ' +
+            '<span style="color:#94a3b8;font-size:13px;">' + wordCount + ' words</span>';
+
+        var right = document.createElement('div');
+        right.style.cssText = 'display:flex;gap:8px';
+
+        var postBtn = document.createElement('button');
+        postBtn.style.cssText = 'padding:8px 16px;background:' + (isConnected ? '#10b981' : '#475569') + ';border:none;border-radius:8px;color:white;cursor:pointer;font-weight:600;font-size:12px;';
+        postBtn.textContent = isConnected ? '📤 POST' : '🔒 Connect First';
+        postBtn.onclick = function () { postToSocial(i); };
+
+        var copyBtn = document.createElement('button');
+        copyBtn.style.cssText = 'padding:8px 16px;background:rgba(99,102,241,0.2);border:1px solid rgba(99,102,241,0.3);color:#818cf8;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;';
+        copyBtn.textContent = '📋 Copy';
+        copyBtn.onclick = function () { copyText(i); };
+
+        right.appendChild(postBtn);
+        right.appendChild(copyBtn);
+
+        head.appendChild(left);
+        head.appendChild(right);
+
+        var pre = document.createElement('pre');
+        pre.style.cssText = 'padding:18px;color:#cbd5e1;font-size:13px;line-height:1.6;white-space:pre-wrap;background:rgba(15,23,42,0.5);margin:16px;border-radius:8px;overflow-x:auto;max-height:300px;';
+        pre.textContent = item.content;
+
+        card.appendChild(head);
+        card.appendChild(pre);
+        out.appendChild(card);
+    });
+
+    var actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;justify-content:center;gap:12px;margin-top:24px;flex-wrap:wrap;';
+
+    var topBtn = document.createElement('button');
+    topBtn.style.cssText = 'padding:12px 24px;background:#374151;border:1px solid #475569;border-radius:10px;color:white;cursor:pointer;font-weight:600;';
+    topBtn.textContent = '↑ New Generation';
+    topBtn.onclick = function () { window.scrollTo({ top: 0 }); };
+
+    var copyAllBtn = document.createElement('button');
+    copyAllBtn.style.cssText = 'padding:12px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:10px;color:white;cursor:pointer;font-weight:600;';
+    copyAllBtn.textContent = '📋 Copy All';
+    copyAllBtn.onclick = copyAll;
+
+    actions.appendChild(topBtn);
+    actions.appendChild(copyAllBtn);
+    out.appendChild(actions);
+}
+
+function copyText(index) {
+    var item = contents[index];
+    if (!item) return;
+    navigator.clipboard.writeText(item.content).then(function () { alert('Copied!'); });
+}
+
+function copyAll() {
+    if (contents.length) {
+        navigator.clipboard.writeText(contents.map(function (c) { return c.content; }).join('\n\n---\n\n'));
+        alert('All copied!');
+    }
+}
+
+function postToSocial(index) {
+    var item = contents[index];
+    if (!item) return;
+
+    if (!isPlatformConnected(item.platform)) {
+        alert('Please connect ' + item.platform + ' first!');
+        return;
+    }
+
+    if (item.platform === 'LinkedIn') {
+        var btn = event.target;
+        var originalText = btn.textContent;
+        btn.textContent = 'Posting...';
+        btn.disabled = true;
+
+        fetch(BACKEND_URL + '/api/linkedin/post', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: item.content })
+        })
+            .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+            .then(function (result) {
+                btn.disabled = false;
+                if (result.ok && result.data.success) {
+                    btn.textContent = '✅ Posted!';
+                    alert('Posted to LinkedIn for real!');
+                } else {
+                    btn.textContent = originalText;
+                    alert('LinkedIn post failed: ' + (result.data.error || 'unknown error'));
+                }
+            })
+            .catch(function (err) {
+                btn.disabled = false;
+                btn.textContent = originalText;
+                alert('Could not reach the backend. Is it deployed and is BACKEND_URL set correctly? ' + err.message);
+            });
+        return;
+    }
+
+    // Other platforms: not wired to a real API yet — copy + open composer
+    navigator.clipboard.writeText(item.content);
+    var urls = {
+        Twitter: 'https://twitter.com/compose/tweet',
+        Instagram: 'https://www.instagram.com/',
+        Facebook: 'https://www.facebook.com/',
+        YouTube: 'https://studio.youtube.com/'
+    };
+    window.open(urls[item.platform], '_blank');
+    alert('Posted to ' + item.platform + '! Content copied. (Real API integration for this platform not built yet.)');
+}
+</script>
+
+</body>
+</html>
